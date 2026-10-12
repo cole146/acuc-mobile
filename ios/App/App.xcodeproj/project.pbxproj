@@ -17,6 +17,19 @@
 		504EC3121FED79650016851F /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 504EC3101FED79650016851F /* LaunchScreen.storyboard */; };
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9582B6822FE993A50072D4E8 /* SceneDelegate.swift */; };
+		836B3532E86D3F6CF9F89483 /* acuc_msg_acuc.caf in Resources */ = {isa = PBXBuildFile; fileRef = F39AAF95BE5008550DECD7CB /* acuc_msg_acuc.caf */; };
+		2A3F56D1EA30C876A70DDEE7 /* acuc_msg_ding.caf in Resources */ = {isa = PBXBuildFile; fileRef = F317551336A0A90C6363ADF1 /* acuc_msg_ding.caf */; };
+		8532684409A32B6A7374C469 /* acuc_msg_pop.caf in Resources */ = {isa = PBXBuildFile; fileRef = 0443710FA33E9406452EF12D /* acuc_msg_pop.caf */; };
+		9774C3CE73B9B9876F43DF56 /* acuc_msg_tap.caf in Resources */ = {isa = PBXBuildFile; fileRef = B9E5E9974377AA7E2A1F04F6 /* acuc_msg_tap.caf */; };
+		CB5E88028DAA6E9F051ACF75 /* acuc_note_acuc.caf in Resources */ = {isa = PBXBuildFile; fileRef = 88864203777745E1FE998993 /* acuc_note_acuc.caf */; };
+		A0E52D24F37C634920739166 /* acuc_note_bell.caf in Resources */ = {isa = PBXBuildFile; fileRef = A1487AE43A3D99829EDDF004 /* acuc_note_bell.caf */; };
+		4C4BD74C445D41FA60F9996E /* acuc_note_chime.caf in Resources */ = {isa = PBXBuildFile; fileRef = 877C5042A9A4C4183BB9D559 /* acuc_note_chime.caf */; };
+		67C482C4FB8B84D87007BB1A /* acuc_note_glass.caf in Resources */ = {isa = PBXBuildFile; fileRef = CDE242CF87BA0BA916FBF672 /* acuc_note_glass.caf */; };
+		21459D746756FCB63E6BD3C5 /* acuc_ring_acuc.caf in Resources */ = {isa = PBXBuildFile; fileRef = A97C4DE0C3CA5901170D036C /* acuc_ring_acuc.caf */; };
+		BAE20BD7B713E981E252D642 /* acuc_ring_bells.caf in Resources */ = {isa = PBXBuildFile; fileRef = 6F49416A9759E9347F4B18F1 /* acuc_ring_bells.caf */; };
+		7B1DDF1D85E89E7D011D10EA /* acuc_ring_calm.caf in Resources */ = {isa = PBXBuildFile; fileRef = EE487F21497EEE575F1039F2 /* acuc_ring_calm.caf */; };
+		D0A524F577CE9828638B3ED5 /* acuc_ring_classic.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1BFA1D7AE9FA6E2876EFB8B2 /* acuc_ring_classic.caf */; };
+		DD155756C0A20828A0B31538 /* acuc_ring_digital.caf in Resources */ = {isa = PBXBuildFile; fileRef = EE9046116B14A35802157EA5 /* acuc_ring_digital.caf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +46,19 @@
 		50B271D01FEDC1A000F3C39B /* public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = public; sourceTree = "<group>"; };
 		9582B6822FE993A50072D4E8 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		F39AAF95BE5008550DECD7CB /* acuc_msg_acuc.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = acuc_msg_acuc.caf; sourceTree = "<group>"; };
+		F317551336A0A90C6363ADF1 /* acuc_msg_ding.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = acuc_msg_ding.caf; sourceTree = "<group>"; };
+		0443710FA33E9406452EF12D /* acuc_msg_pop.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = acuc_msg_pop.caf; sourceTree = "<group>"; };
+		B9E5E9974377AA7E2A1F04F6 /* acuc_msg_tap.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = acuc_msg_tap.caf; sourceTree = "<group>"; };
+		88864203777745E1FE998993 /* acuc_note_acuc.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = acuc_note_acuc.caf; sourceTree = "<group>"; };
+		A1487AE43A3D99829EDDF004 /* acuc_note_bell.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = acuc_note_bell.caf; sourceTree = "<group>"; };
+		877C5042A9A4C4183BB9D559 /* acuc_note_chime.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = acuc_note_chime.caf; sourceTree = "<group>"; };
+		CDE242CF87BA0BA916FBF672 /* acuc_note_glass.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = acuc_note_glass.caf; sourceTree = "<group>"; };
+		A97C4DE0C3CA5901170D036C /* acuc_ring_acuc.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = acuc_ring_acuc.caf; sourceTree = "<group>"; };
+		6F49416A9759E9347F4B18F1 /* acuc_ring_bells.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = acuc_ring_bells.caf; sourceTree = "<group>"; };
+		EE487F21497EEE575F1039F2 /* acuc_ring_calm.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = acuc_ring_calm.caf; sourceTree = "<group>"; };
+		1BFA1D7AE9FA6E2876EFB8B2 /* acuc_ring_classic.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = acuc_ring_classic.caf; sourceTree = "<group>"; };
+		EE9046116B14A35802157EA5 /* acuc_ring_digital.caf */ = {isa = PBXFileReference; lastKnownFileType = file; path = acuc_ring_digital.caf; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,6 +96,19 @@
 				9582B6822FE993A50072D4E8 /* SceneDelegate.swift */,
 				50379B222058CBB4000EE86E /* capacitor.config.json */,
 				A0C0C0C0C0C0C0C0C0C0C001 /* GoogleService-Info.plist */,
+				F39AAF95BE5008550DECD7CB /* acuc_msg_acuc.caf */,
+				F317551336A0A90C6363ADF1 /* acuc_msg_ding.caf */,
+				0443710FA33E9406452EF12D /* acuc_msg_pop.caf */,
+				B9E5E9974377AA7E2A1F04F6 /* acuc_msg_tap.caf */,
+				88864203777745E1FE998993 /* acuc_note_acuc.caf */,
+				A1487AE43A3D99829EDDF004 /* acuc_note_bell.caf */,
+				877C5042A9A4C4183BB9D559 /* acuc_note_chime.caf */,
+				CDE242CF87BA0BA916FBF672 /* acuc_note_glass.caf */,
+				A97C4DE0C3CA5901170D036C /* acuc_ring_acuc.caf */,
+				6F49416A9759E9347F4B18F1 /* acuc_ring_bells.caf */,
+				EE487F21497EEE575F1039F2 /* acuc_ring_calm.caf */,
+				1BFA1D7AE9FA6E2876EFB8B2 /* acuc_ring_classic.caf */,
+				EE9046116B14A35802157EA5 /* acuc_ring_digital.caf */,
 				A0C0C0C0C0C0C0C0C0C0C003 /* App.entitlements */,
 				504EC3071FED79650016851F /* AppDelegate.swift */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
@@ -152,6 +191,19 @@
 				504EC30F1FED79650016851F /* Assets.xcassets in Resources */,
 				50379B232058CBB4000EE86E /* capacitor.config.json in Resources */,
 				A0C0C0C0C0C0C0C0C0C0C002 /* GoogleService-Info.plist in Resources */,
+				836B3532E86D3F6CF9F89483 /* acuc_msg_acuc.caf in Resources */,
+				2A3F56D1EA30C876A70DDEE7 /* acuc_msg_ding.caf in Resources */,
+				8532684409A32B6A7374C469 /* acuc_msg_pop.caf in Resources */,
+				9774C3CE73B9B9876F43DF56 /* acuc_msg_tap.caf in Resources */,
+				CB5E88028DAA6E9F051ACF75 /* acuc_note_acuc.caf in Resources */,
+				A0E52D24F37C634920739166 /* acuc_note_bell.caf in Resources */,
+				4C4BD74C445D41FA60F9996E /* acuc_note_chime.caf in Resources */,
+				67C482C4FB8B84D87007BB1A /* acuc_note_glass.caf in Resources */,
+				21459D746756FCB63E6BD3C5 /* acuc_ring_acuc.caf in Resources */,
+				BAE20BD7B713E981E252D642 /* acuc_ring_bells.caf in Resources */,
+				7B1DDF1D85E89E7D011D10EA /* acuc_ring_calm.caf in Resources */,
+				D0A524F577CE9828638B3ED5 /* acuc_ring_classic.caf in Resources */,
+				DD155756C0A20828A0B31538 /* acuc_ring_digital.caf in Resources */,
 				504EC30D1FED79650016851F /* Main.storyboard in Resources */,
 				2FAD9763203C412B000D30F8 /* config.xml in Resources */,
 			);
