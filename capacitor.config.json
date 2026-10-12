@@ -40,7 +40,7 @@
       "launchFadeOutDuration": 150
     },
     "SystemBars": {
-      "insetsHandling": "native",
+      "insetsHandling": "disable",
       "style": "LIGHT"
     },
     "StatusBar": {
