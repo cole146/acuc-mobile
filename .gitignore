@@ -1,0 +1,13 @@
+node_modules/
+android/app/google-services.json
+firebase/
+*.jks
+*.keystore
+*.p8
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+ios/App/build/
+ios/DerivedData/
+.DS_Store

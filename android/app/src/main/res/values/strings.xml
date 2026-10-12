@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ACUC Jobs</string>
+    <string name="title_activity_main">ACUC Jobs</string>
+    <string name="package_name">jobs.acuc.app</string>
+    <string name="custom_url_scheme">jobs.acuc.app</string>
+</resources>
