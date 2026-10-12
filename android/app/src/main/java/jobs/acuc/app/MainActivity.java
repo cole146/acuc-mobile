@@ -1,6 +1,8 @@
 package jobs.acuc.app;
 
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.net.ConnectivityManager;
 import android.net.NetworkCapabilities;
 import android.net.Uri;
@@ -16,6 +18,8 @@ import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebViewClient;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends BridgeActivity {
@@ -35,8 +39,21 @@ public class MainActivity extends BridgeActivity {
      * hiding headers under the clock and battery icons). The bars sit on solid white.
      */
     private void keepPagesBelowSystemBars() {
-        View decor = getWindow().getDecorView();
+        android.view.Window w = getWindow();
+        w.setBackgroundDrawable(new ColorDrawable(Color.WHITE));
+        View decor = w.getDecorView();
         decor.setBackgroundColor(Color.WHITE);
+        try {
+            w.setStatusBarColor(Color.WHITE);
+            w.setNavigationBarColor(Color.WHITE);
+            if (Build.VERSION.SDK_INT >= 29) {
+                w.setStatusBarContrastEnforced(false);
+                w.setNavigationBarContrastEnforced(false);
+            }
+        } catch (Exception ignored) {}
+        WindowInsetsControllerCompat bars = WindowCompat.getInsetsController(w, decor);
+        bars.setAppearanceLightStatusBars(true);
+        bars.setAppearanceLightNavigationBars(true);
         ViewCompat.setOnApplyWindowInsetsListener(decor, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
             Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
