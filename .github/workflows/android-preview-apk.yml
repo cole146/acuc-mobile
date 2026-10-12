@@ -37,7 +37,8 @@ jobs:
         working-directory: android
         run: |
           VERSION=$(node -p "require('../package.json').version")
-          ./gradlew --no-daemon assembleDebug -PacucVersionCode=$((1000 + ${{ github.run_number }})) -PacucVersionName="$VERSION-preview"
+          set -o pipefail
+          ./gradlew --no-daemon assembleDebug -PacucVersionCode=$((1000 + ${{ github.run_number }})) -PacucVersionName="$VERSION-preview" 2>&1 | tee "$GITHUB_WORKSPACE/build.log"
           cp app/build/outputs/apk/debug/app-debug.apk "$GITHUB_WORKSPACE/ACUC-Jobs-$VERSION-preview.apk"
       - uses: actions/upload-artifact@v4
         with:
@@ -51,3 +52,13 @@ jobs:
           gh release create "$TAG" ACUC-Jobs-*-preview.apk --target "$GITHUB_SHA" --prerelease \
             --title "ACUC Jobs preview APK #${{ github.run_number }}" \
             --notes "Test build for Android. Download the .apk on your phone, open it, and allow installing from this source."
+      - name: Share the build log when the build fails
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ -f build.log ] || exit 0
+          grep -nE "error:|e: |FAILURE|What went wrong|Could not|> " build.log | tail -120 > build-errors.txt || true
+          tail -200 build.log >> build-errors.txt
+          gh release delete build-log --yes --cleanup-tag 2>/dev/null || true
+          gh release create build-log build-errors.txt --target "$GITHUB_SHA" --prerelease --title "Last failed build log" --notes "Log of run ${{ github.run_number }}"
