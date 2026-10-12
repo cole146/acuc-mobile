@@ -18,6 +18,14 @@ android {
     }
     // Release signing from environment variables (CI) — never committed. See BUILD.md.
     signingConfigs {
+        // Fixed key for preview (debug) builds, so Firebase / Google sign-in recognise every build.
+        // Test-only: Play Store releases use your own upload key (see BUILD.md).
+        debug {
+            storeFile file("acuc-preview.keystore")
+            storePassword "android"
+            keyAlias "androiddebugkey"
+            keyPassword "android"
+        }
         release {
             def ks = System.getenv("ACUC_KEYSTORE_FILE")
             if (ks) {

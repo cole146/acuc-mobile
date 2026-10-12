@@ -3,6 +3,7 @@ android/app/google-services.json
 firebase/
 *.jks
 *.keystore
+!android/app/acuc-preview.keystore
 *.p8
 android/.gradle/
 android/build/
