@@ -8,6 +8,9 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: write
+
 jobs:
   apk:
     runs-on: ubuntu-latest
@@ -40,3 +43,21 @@ jobs:
         with:
           name: ACUC-Jobs-preview-apk
           path: ACUC-Jobs-*-preview.apk
+      - name: Publish as a release (direct download link for phones)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="preview-${{ github.run_number }}"
+          gh release create "$TAG" ACUC-Jobs-*-preview.apk --target "$GITHUB_SHA" --prerelease \
+            --title "ACUC Jobs preview APK #${{ github.run_number }}" \
+            --notes "Test build for Android. Download the .apk on your phone, open it, and allow installing from this source."
+      - name: Keep a copy on the apk-builds branch
+        run: |
+          mkdir -p /tmp/out && cp ACUC-Jobs-*-preview.apk /tmp/out/
+          git config user.name "github-actions" && git config user.email "actions@github.com"
+          git switch --orphan apk-builds
+          git rm -rq --cached . >/dev/null 2>&1 || true
+          find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp /tmp/out/*.apk . && git add *.apk && git commit -qm "Preview APK #${{ github.run_number }}"
+          git push -f origin apk-builds
+
