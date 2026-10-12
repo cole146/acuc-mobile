@@ -51,9 +51,9 @@ public class MainActivity extends BridgeActivity {
                 w.setNavigationBarContrastEnforced(false);
             }
         } catch (Exception ignored) {}
-        WindowInsetsControllerCompat bars = WindowCompat.getInsetsController(w, decor);
-        bars.setAppearanceLightStatusBars(true);
-        bars.setAppearanceLightNavigationBars(true);
+        WindowInsetsControllerCompat barsCtl = WindowCompat.getInsetsController(w, decor);
+        barsCtl.setAppearanceLightStatusBars(true);
+        barsCtl.setAppearanceLightNavigationBars(true);
         ViewCompat.setOnApplyWindowInsetsListener(decor, (v, insets) -> {
             Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
             Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
