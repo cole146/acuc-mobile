@@ -56,3 +56,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return config
     }
 }
+
+
+/// The ACUC app's screen: the website, with native iPhone behaviour on top —
+/// swipe from the left edge to go back (like every iOS app), no link previews.
+class ACUCViewController: CAPBridgeViewController {
+    override func capacitorDidLoad() {
+        super.capacitorDidLoad()
+        webView?.allowsBackForwardNavigationGestures = true
+        webView?.allowsLinkPreview = false
+        webView?.scrollView.contentInsetAdjustmentBehavior = .automatic
+        webView?.isOpaque = true
+        webView?.backgroundColor = .white
+        webView?.scrollView.backgroundColor = .white
+    }
+}

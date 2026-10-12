@@ -31,6 +31,19 @@ public class MainActivity extends BridgeActivity {
             bridge.setWebViewClient(new AcucWebViewClient(bridge, this));
         }
         keepPagesBelowSystemBars();
+        tuneWebView();
+    }
+
+    /** Smoother scrolling and no Android "glow" at the edges — the app has its own pull-to-refresh. */
+    private void tuneWebView() {
+        try {
+            WebView wv = bridge != null ? bridge.getWebView() : null;
+            if (wv == null) return;
+            wv.setOverScrollMode(View.OVER_SCROLL_NEVER);
+            wv.setBackgroundColor(Color.WHITE);
+            wv.getSettings().setOffscreenPreRaster(true);
+            wv.setHapticFeedbackEnabled(true);
+        } catch (Exception ignored) {}
     }
 
     /**
