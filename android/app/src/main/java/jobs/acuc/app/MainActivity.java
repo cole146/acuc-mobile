@@ -24,12 +24,15 @@ import androidx.core.view.WindowInsetsCompat;
 
 public class MainActivity extends BridgeActivity {
 
+    FastStart fastStart;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         // ACUC's own native pieces, reached by the site's in-app bridge by these exact names:
         // fingerprint / face sign-in ("BiometricAuth") and the encrypted key store ("SecureStorage").
         registerPlugin(BiometricAuthPlugin.class);
         registerPlugin(SecureStoragePlugin.class);
+        fastStart = new FastStart(this);
         super.onCreate(savedInstanceState);
         if (bridge != null) {
             bridge.setWebViewClient(new AcucWebViewClient(bridge, this));
@@ -99,6 +102,24 @@ public class MainActivity extends BridgeActivity {
             super(bridge);
             this.acucBridge = bridge;
             this.activity = activity;
+        }
+
+        @Override
+        public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
+            FastStart fs = activity.fastStart;
+            if (fs != null && request != null) {
+                WebResourceResponse r = fs.launch(request);
+                if (r != null) return r;
+                r = fs.asset(request);
+                if (r != null) return r;
+            }
+            return super.shouldInterceptRequest(view, request);
+        }
+
+        @Override
+        public void onPageFinished(WebView view, String url) {
+            super.onPageFinished(view, url);
+            if (activity.fastStart != null && url != null) activity.fastStart.pageFinished(url);
         }
 
         @Override
