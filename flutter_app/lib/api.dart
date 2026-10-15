@@ -24,7 +24,7 @@ class Session extends ChangeNotifier {
   Session._();
   static final Session I = Session._();
 
-  final _store = const FlutterSecureStorage(aOptions: AndroidOptions(encryptedSharedPreferences: true));
+  final _store = const FlutterSecureStorage();
   final _client = http.Client();
 
   String? _token;

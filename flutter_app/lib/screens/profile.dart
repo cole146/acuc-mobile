@@ -9,7 +9,6 @@ import '../api.dart';
 import '../models.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
-import 'auth.dart';
 import 'lists.dart';
 import 'web.dart';
 
