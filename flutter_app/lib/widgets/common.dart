@@ -170,14 +170,13 @@ class OPill extends StatelessWidget {
   Widget build(BuildContext context) => Container(
         height: 32,
         padding: const EdgeInsets.symmetric(horizontal: 14),
-        alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(999),
           border: Border.all(color: money ? AC.greenLine : AC.pillLine, width: 1.5),
         ),
-        child: Text(text,
+        child: Center(widthFactor: 1, child: Text(text,
             maxLines: 1,
-            style: TextStyle(fontSize: 14.5, fontWeight: money ? FontWeight.w600 : FontWeight.w500, color: money ? AC.green : AC.text)),
+            style: TextStyle(fontSize: 14.5, fontWeight: money ? FontWeight.w600 : FontWeight.w500, color: money ? AC.green : AC.text))),
       );
 }
 
