@@ -13,70 +13,54 @@ Future<bool> requireSignIn(BuildContext context, {String reason = ''}) async {
   return ok == true && Session.I.signedIn;
 }
 
-class WelcomePage extends StatelessWidget {
-  final VoidCallback onBrowse;
-  const WelcomePage({super.key, required this.onBrowse});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 20),
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            const Spacer(flex: 2),
-            Center(child: Image.asset('assets/images/logo.png', width: 92, height: 92)),
-            const SizedBox(height: 26),
-            const Text('Find your next job,\nanywhere in the world',
-                textAlign: TextAlign.center, style: TextStyle(fontSize: 28, height: 1.2, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 12),
-            const Text('Search jobs, apply in a few taps, track every application and talk to employers.',
-                textAlign: TextAlign.center, style: TextStyle(fontSize: 15.5, color: AC.sub, height: 1.5)),
-            const Spacer(flex: 3),
-            FilledButton(
-              onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SignInPage())),
-              child: const Text('Sign in'),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const WebAuthPage(signup: true))),
-              child: const Text('Create account'),
-            ),
-            const SizedBox(height: 6),
-            TextButton(onPressed: onBrowse, child: const Text('Browse jobs first', style: TextStyle(fontWeight: FontWeight.w700))),
-          ]),
-        ),
-      ),
-    );
-  }
-}
-
+/// Sign in — the same look as the app sign-in page (acuc-app-login): big centred logo, tall rounded
+/// fields, solid pill "Continue", "Forgot password?" under it, "Create new account" at the bottom.
 class SignInPage extends StatefulWidget {
   final String reason;
-  const SignInPage({super.key, this.reason = ''});
+  final bool rootPage; // shown as the app's first screen (no back arrow)
+  const SignInPage({super.key, this.reason = '', this.rootPage = false});
   @override
   State<SignInPage> createState() => _SignInPageState();
 }
 
 class _SignInPageState extends State<SignInPage> {
-  final _login = TextEditingController();
+  final _email = TextEditingController();
   final _pass = TextEditingController();
+  final _passFocus = FocusNode();
+  bool _step2 = false;
   bool _busy = false;
   bool _hide = true;
   String _error = '';
 
   @override
   void dispose() {
-    _login.dispose();
+    _email.dispose();
     _pass.dispose();
+    _passFocus.dispose();
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  void _continue() {
     FocusScope.of(context).unfocus();
-    if (_login.text.trim().isEmpty || _pass.text.isEmpty) {
-      setState(() => _error = 'Enter your email and password.');
+    if (!_step2) {
+      final e = _email.text.trim();
+      if (e.isEmpty) {
+        setState(() => _error = 'Enter your email address.');
+        return;
+      }
+      setState(() {
+        _error = '';
+        _step2 = true;
+      });
+      Future.delayed(const Duration(milliseconds: 250), () => _passFocus.requestFocus());
+      return;
+    }
+    _submit();
+  }
+
+  Future<void> _submit() async {
+    if (_pass.text.isEmpty) {
+      setState(() => _error = 'Enter your password.');
       return;
     }
     setState(() {
@@ -84,10 +68,10 @@ class _SignInPageState extends State<SignInPage> {
       _error = '';
     });
     try {
-      await Session.I.signIn(_login.text, _pass.text);
+      await Session.I.signIn(_email.text, _pass.text);
       Saved.I.load();
       Unread.I.refresh();
-      if (mounted) Navigator.of(context).pop(true);
+      if (mounted && Navigator.of(context).canPop()) Navigator.of(context).pop(true);
     } catch (e) {
       setState(() => _error = '$e');
     } finally {
@@ -100,26 +84,30 @@ class _SignInPageState extends State<SignInPage> {
     if (ok == true && mounted) {
       Saved.I.load();
       Unread.I.refresh();
-      Navigator.of(context).pop(true);
+      if (Navigator.of(context).canPop()) Navigator.of(context).pop(true);
     }
   }
 
   Future<void> _forgot() async {
-    final c = TextEditingController(text: _login.text.trim());
-    final email = await showDialog<String>(
+    final c = TextEditingController(text: _email.text.trim());
+    final email = await showModalBottomSheet<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Reset your password'),
-        content: TextField(
-          controller: c,
-          keyboardType: TextInputType.emailAddress,
-          autofocus: true,
-          decoration: const InputDecoration(hintText: 'Your email'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(26))),
+      builder: (ctx) => Padding(
+        padding: EdgeInsets.fromLTRB(22, 14, 22, 22 + MediaQuery.of(ctx).viewInsets.bottom),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          Center(child: Container(width: 42, height: 5, decoration: BoxDecoration(color: const Color(0x2E14213D), borderRadius: BorderRadius.circular(99)))),
+          const SizedBox(height: 18),
+          const Text('Reset your password', style: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, color: AC.ink2)),
+          const SizedBox(height: 6),
+          const Text('We’ll email you a link to choose a new one.', style: TextStyle(fontSize: 15, color: AC.sub, fontWeight: FontWeight.w300)),
+          const SizedBox(height: 16),
+          TextField(controller: c, autofocus: true, keyboardType: TextInputType.emailAddress, decoration: const InputDecoration(hintText: 'Email address')),
+          const SizedBox(height: 14),
           FilledButton(onPressed: () => Navigator.pop(ctx, c.text.trim()), child: const Text('Send link')),
-        ],
+        ]),
       ),
     );
     if (email == null || email.isEmpty) return;
@@ -133,74 +121,154 @@ class _SignInPageState extends State<SignInPage> {
 
   @override
   Widget build(BuildContext context) {
+    final h = MediaQuery.of(context).size.height;
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-          children: [
-            Image.asset('assets/images/logo.png', width: 56, height: 56, alignment: Alignment.centerLeft),
-            const SizedBox(height: 18),
-            const Text('Sign in to ACUC', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
-            const SizedBox(height: 6),
-            Text(widget.reason.isNotEmpty ? widget.reason : 'Use the same email and password as on acuc.jobs.',
-                style: const TextStyle(color: AC.sub, fontSize: 15)),
-            const SizedBox(height: 24),
-            TextField(
-              controller: _login,
-              keyboardType: TextInputType.emailAddress,
-              autofillHints: const [AutofillHints.email, AutofillHints.username],
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(labelText: 'Email'),
-            ),
-            const SizedBox(height: 14),
-            TextField(
-              controller: _pass,
-              obscureText: _hide,
-              autofillHints: const [AutofillHints.password],
-              textInputAction: TextInputAction.done,
-              onSubmitted: (_) => _submit(),
-              decoration: InputDecoration(
-                labelText: 'Password',
-                suffixIcon: IconButton(
-                  icon: Icon(_hide ? Icons.visibility_outlined : Icons.visibility_off_outlined),
-                  onPressed: () => setState(() => _hide = !_hide),
-                ),
+        child: LayoutBuilder(
+          builder: (context, box) => SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 22),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: box.maxHeight),
+              child: IntrinsicHeight(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+                  SizedBox(
+                    height: 48,
+                    child: Row(children: [
+                      if (!widget.rootPage || _step2)
+                        IconButton(
+                          onPressed: () {
+                            if (_step2) {
+                              setState(() {
+                                _step2 = false;
+                                _error = '';
+                              });
+                            } else {
+                              Navigator.of(context).maybePop();
+                            }
+                          },
+                          icon: const Svg(Ico.back, size: 24, color: AC.ink2),
+                        ),
+                    ]),
+                  ),
+                  SizedBox(height: _step2 ? (h * 0.05).clamp(16, 50) : (h * 0.12).clamp(30, 110)),
+                  Center(child: Image.asset('assets/images/logo.png', width: _step2 ? 60 : 76, height: _step2 ? 60 : 76)),
+                  if (_step2) ...[
+                    const SizedBox(height: 18),
+                    const Text('Enter your password', textAlign: TextAlign.center, style: TextStyle(fontSize: 19, fontWeight: FontWeight.w700, letterSpacing: -0.2, color: Color(0xFF1C1E21))),
+                    const SizedBox(height: 2),
+                    Text(_email.text.trim(), textAlign: TextAlign.center, style: const TextStyle(fontSize: 14, color: Color(0xFF606770))),
+                    const SizedBox(height: 28),
+                  ] else
+                    SizedBox(height: (h * 0.08).clamp(28, 84)),
+                  if (widget.reason.isNotEmpty && !_step2) ...[
+                    Text(widget.reason, textAlign: TextAlign.center, style: const TextStyle(fontSize: 15, color: Color(0xFF606770))),
+                    const SizedBox(height: 16),
+                  ],
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    child: _step2
+                        ? TextField(
+                            key: const ValueKey('pw'),
+                            controller: _pass,
+                            focusNode: _passFocus,
+                            obscureText: _hide,
+                            autofillHints: const [AutofillHints.password],
+                            textInputAction: TextInputAction.done,
+                            onSubmitted: (_) => _continue(),
+                            style: const TextStyle(fontSize: 17, color: Color(0xFF1C1E21)),
+                            decoration: InputDecoration(
+                              hintText: 'Password',
+                              suffixIcon: TextButton(
+                                onPressed: () => setState(() => _hide = !_hide),
+                                child: Text(_hide ? 'Show' : 'Hide', style: const TextStyle(color: Color(0xFF606770), fontWeight: FontWeight.w600)),
+                              ),
+                            ),
+                          )
+                        : TextField(
+                            key: const ValueKey('em'),
+                            controller: _email,
+                            keyboardType: TextInputType.emailAddress,
+                            autofillHints: const [AutofillHints.email, AutofillHints.username],
+                            textInputAction: TextInputAction.next,
+                            onSubmitted: (_) => _continue(),
+                            style: const TextStyle(fontSize: 17, color: Color(0xFF1C1E21)),
+                            decoration: const InputDecoration(hintText: 'Email address'),
+                          ),
+                  ),
+                  if (_error.isNotEmpty)
+                    Container(
+                      margin: const EdgeInsets.only(top: 12),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+                      decoration: BoxDecoration(color: AC.redSoft, borderRadius: BorderRadius.circular(14)),
+                      child: Text(_error, style: const TextStyle(color: Color(0xFFB42318), fontWeight: FontWeight.w500, fontSize: 14.5)),
+                    ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 50,
+                    child: FilledButton(
+                      onPressed: _busy ? null : _continue,
+                      child: _busy
+                          ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
+                          : const Text('Continue'),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  if (!_step2)
+                    SizedBox(
+                      height: 50,
+                      child: OutlinedButton(
+                        onPressed: () => _web(),
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFFDADDE1)),
+                          foregroundColor: const Color(0xFF1C1E21),
+                          textStyle: const TextStyle(fontFamily: AC.font, fontSize: 16, fontWeight: FontWeight.w600),
+                        ),
+                        child: const Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+                          _GoogleG(),
+                          SizedBox(width: 10),
+                          Text('Continue with Google'),
+                        ]),
+                      ),
+                    ),
+                  TextButton(
+                    onPressed: _forgot,
+                    style: TextButton.styleFrom(foregroundColor: const Color(0xFF1C1E21)),
+                    child: const Text('Forgot password?', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  ),
+                  const Spacer(),
+                  const SizedBox(height: 36),
+                  SizedBox(
+                    height: 50,
+                    child: OutlinedButton(
+                      onPressed: () => _web(signup: true),
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: AC.brand, width: 1.5),
+                        foregroundColor: AC.brand,
+                        textStyle: const TextStyle(fontFamily: AC.font, fontSize: 17, fontWeight: FontWeight.w600),
+                      ),
+                      child: const Text('Create new account'),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Center(child: Opacity(opacity: 0.9, child: Image.asset('assets/images/wordmark.png', height: 22))),
+                  const SizedBox(height: 18),
+                ]),
               ),
             ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(onPressed: _forgot, child: const Text('Forgot password?')),
-            ),
-            if (_error.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Text(_error, style: const TextStyle(color: AC.red, fontWeight: FontWeight.w600)),
-              ),
-            FilledButton(
-              onPressed: _busy ? null : _submit,
-              child: _busy
-                  ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white))
-                  : const Text('Sign in'),
-            ),
-            const SizedBox(height: 22),
-            const Row(children: [
-              Expanded(child: Divider()),
-              Padding(padding: EdgeInsets.symmetric(horizontal: 12), child: Text('or', style: TextStyle(color: AC.sub))),
-              Expanded(child: Divider()),
-            ]),
-            const SizedBox(height: 22),
-            OutlinedButton.icon(
-              onPressed: () => _web(),
-              icon: const Icon(Icons.language_rounded),
-              label: const Text('Other ways to sign in'),
-            ),
-            const SizedBox(height: 12),
-            OutlinedButton(onPressed: () => _web(signup: true), child: const Text('Create a new account')),
-          ],
+          ),
         ),
       ),
     );
   }
+}
+
+class _GoogleG extends StatelessWidget {
+  const _GoogleG();
+  @override
+  Widget build(BuildContext context) => const SizedBox(
+        width: 20,
+        height: 20,
+        child: Text('G', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: Color(0xFF4285F4), height: 1.15)),
+      );
 }

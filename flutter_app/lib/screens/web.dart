@@ -138,14 +138,26 @@ class _WebPageState extends State<WebPage> with AutomaticKeepAliveClientMixin {
         }
       },
       child: Scaffold(
-        appBar: AppBar(
-          automaticallyImplyLeading: !widget.embedded,
-          title: Text(widget.title),
-          actions: [IconButton(tooltip: 'Reload', icon: const Icon(Icons.refresh_rounded), onPressed: () => _c.reload())],
+        appBar: widget.embedded
+            ? PreferredSize(
+                preferredSize: const Size.fromHeight(2),
+                child: SafeArea(
+                  bottom: false,
+                  child: _progress < 100
+                      ? LinearProgressIndicator(value: _progress / 100, minHeight: 2, backgroundColor: Colors.transparent, color: AC.blue)
+                      : const SizedBox(height: 2),
+                ),
+              )
+            : AppBar(
+          automaticallyImplyLeading: false,
+          leading: IconButton(onPressed: () => Navigator.of(context).maybePop(), icon: const Svg(Ico.back, size: 22, color: AC.ink2)),
+          title: Text(widget.title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AC.ink2)),
+          shape: const Border(bottom: BorderSide(color: Color(0xFFEDF1F7))),
+          actions: [IconButton(tooltip: 'Reload', icon: const Svg('<path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/>', size: 20, color: AC.ink2), onPressed: () => _c.reload())],
           bottom: _progress < 100
               ? PreferredSize(
                   preferredSize: const Size.fromHeight(2),
-                  child: LinearProgressIndicator(value: _progress / 100, minHeight: 2, backgroundColor: Colors.transparent),
+                  child: LinearProgressIndicator(value: _progress / 100, minHeight: 2, backgroundColor: Colors.transparent, color: AC.blue),
                 )
               : null,
         ),
@@ -197,11 +209,7 @@ class _WebAuthPageState extends State<WebAuthPage> {
       },
     );
     final issue = Uri.parse(kBase).replace(path: '/', queryParameters: {'acuc_app_issue': _state}).toString();
-    final start = Uri.parse(kBase).replace(path: '/acuc-lo/', queryParameters: {
-      'redirect_to': issue,
-      if (widget.signup) 'action': 'register',
-      if (widget.signup) 'mode': 'signup',
-    });
+    final start = Uri.parse(kBase).replace(path: widget.signup ? '/register-form/' : '/acuc-lo/', queryParameters: {'redirect_to': issue});
     _c.loadRequest(start);
   }
 
@@ -247,7 +255,9 @@ class _WebAuthPageState extends State<WebAuthPage> {
         },
         child: Scaffold(
           appBar: AppBar(
-            title: Text(widget.signup ? 'Create account' : 'Sign in'),
+            automaticallyImplyLeading: false,
+            leading: IconButton(onPressed: () => Navigator.of(context).maybePop(false), icon: const Svg(Ico.close, size: 22, color: AC.ink2)),
+            title: Text(widget.signup ? 'Create account' : 'Sign in', style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: AC.ink2)),
             bottom: _progress < 100
                 ? PreferredSize(
                     preferredSize: const Size.fromHeight(2),

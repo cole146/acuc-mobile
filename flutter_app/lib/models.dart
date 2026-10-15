@@ -91,6 +91,15 @@ class Job {
   bool get appliesOnAcuc => applyMethod == 'acuc' || applyMethod == 'internal' || applyMethod.isEmpty && _b(raw['allow_acuc_apply']);
   bool get appliesOutside => !appliesOnAcuc && applyUrl.startsWith('http');
 
+  String get howToApply => appliesOnAcuc ? 'Easy apply on ACUC' : (appliesOutside ? 'Apply on company website' : 'Apply on ACUC');
+
+  bool get isNewish {
+    if (isNew) return true;
+    final t = DateTime.tryParse(postedAt);
+    final days = postedDays > 0 ? postedDays : (t == null ? 99 : DateTime.now().difference(t).inDays);
+    return days <= 7;
+  }
+
   String get posted {
     if (postedDays <= 0) {
       final t = DateTime.tryParse(postedAt);
@@ -257,4 +266,11 @@ class Unread extends ValueNotifier<int> {
       value = _i(r['unread']);
     } catch (_) {}
   }
+}
+
+/// Tells the Applied list to refresh after a new application.
+class Applied extends ChangeNotifier {
+  Applied._();
+  static final Applied I = Applied._();
+  void bump() => notifyListeners();
 }
