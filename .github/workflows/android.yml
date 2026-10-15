@@ -72,7 +72,7 @@ jobs:
           ACUC_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           VERSION=$(node -p "require('../package.json').version")
-          CODE=$((1000 + ${{ github.run_number }}))
+          CODE=$((3000 + ${{ github.run_number }}))
           set -o pipefail
           mkdir -p "$GITHUB_WORKSPACE/dist"
           if [ "$HAS_KEY" = "true" ]; then

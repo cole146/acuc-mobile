@@ -46,6 +46,8 @@ public class MainActivity extends BridgeActivity {
             wv.setOverScrollMode(View.OVER_SCROLL_NEVER);
             wv.setBackgroundColor(Color.WHITE);
             wv.getSettings().setOffscreenPreRaster(true);
+            wv.getSettings().setCacheMode(android.webkit.WebSettings.LOAD_DEFAULT);
+            if (Build.VERSION.SDK_INT >= 26) wv.setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, true);
             wv.setHapticFeedbackEnabled(true);
         } catch (Exception ignored) {}
     }
