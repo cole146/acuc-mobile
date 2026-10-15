@@ -40,8 +40,7 @@ jobs:
       - name: Check the signing key is set up
         run: |
           if [ "$HAS_KEY" != "true" ]; then
-            echo "::error::The upload key isn't in the repository secrets yet. Add ANDROID_KEYSTORE_B64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_PASSWORD and ANDROID_KEY_ALIAS (Settings → Secrets and variables → Actions)."
-            exit 1
+            echo "::notice::No upload key in the secrets: building an UNSIGNED bundle. Sign it with the upload key (jarsigner) before uploading to Play."
           fi
 
       - run: npm ci
@@ -59,6 +58,7 @@ jobs:
       - run: npx cap sync android
 
       - name: Signing key
+        if: env.HAS_KEY == 'true'
         env:
           KS64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
         run: printf '%s' "$KS64" | tr -d '\r\n ' | base64 --decode > "$RUNNER_TEMP/acuc-upload.jks"
@@ -66,7 +66,7 @@ jobs:
       - name: Build AAB + APK
         working-directory: android
         env:
-          ACUC_KEYSTORE_FILE: ${{ runner.temp }}/acuc-upload.jks
+          ACUC_KEYSTORE_FILE: ${{ env.HAS_KEY == 'true' && format('{0}/acuc-upload.jks', runner.temp) || '' }}
           ACUC_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ACUC_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ACUC_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
@@ -74,13 +74,19 @@ jobs:
           VERSION=$(node -p "require('../package.json').version")
           CODE=$((1000 + ${{ github.run_number }}))
           set -o pipefail
-          ./gradlew --no-daemon bundleRelease assembleRelease -PacucVersionCode=$CODE -PacucVersionName="$VERSION" 2>&1 | tee "$GITHUB_WORKSPACE/build.log"
           mkdir -p "$GITHUB_WORKSPACE/dist"
-          cp app/build/outputs/bundle/release/app-release.aab "$GITHUB_WORKSPACE/dist/ACUC-Jobs-$VERSION-$CODE.aab"
-          cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/dist/ACUC-Jobs-$VERSION-$CODE.apk"
+          if [ "$HAS_KEY" = "true" ]; then
+            ./gradlew --no-daemon bundleRelease assembleRelease -PacucVersionCode=$CODE -PacucVersionName="$VERSION" 2>&1 | tee "$GITHUB_WORKSPACE/build.log"
+            cp app/build/outputs/bundle/release/app-release.aab "$GITHUB_WORKSPACE/dist/ACUC-Jobs-$VERSION-$CODE.aab"
+            cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/dist/ACUC-Jobs-$VERSION-$CODE.apk"
+          else
+            ./gradlew --no-daemon bundleRelease -PacucVersionCode=$CODE -PacucVersionName="$VERSION" 2>&1 | tee "$GITHUB_WORKSPACE/build.log"
+            cp app/build/outputs/bundle/release/app-release.aab "$GITHUB_WORKSPACE/dist/ACUC-Jobs-$VERSION-$CODE-unsigned.aab"
+          fi
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"; echo "CODE=$CODE" >> "$GITHUB_ENV"
 
       - name: Check the signature
+        if: env.HAS_KEY == 'true'
         run: |
           jarsigner -verify dist/*.aab | tail -1
           keytool -printcert -jarfile dist/*.aab | grep -E "Owner|SHA256:" || true
@@ -96,10 +102,10 @@ jobs:
         run: |
           gh release create "android-${{ github.run_number }}" dist/* --target "$GITHUB_SHA" --prerelease \
             --title "ACUC Jobs Android $VERSION ($CODE)" \
-            --notes "Signed for Google Play. Upload the .aab in Play Console; install the .apk on a phone to test."
+            --notes "$([ "$HAS_KEY" = true ] && echo 'Signed for Google Play. Upload the .aab in Play Console; install the .apk on a phone to test.' || echo 'UNSIGNED bundle: sign with the upload key before uploading to Play.')"
 
       - name: Upload to Google Play (internal testing)
-        if: ${{ env.HAS_PLAY == 'true' && (github.event_name == 'push' || inputs.upload) }}
+        if: ${{ env.HAS_PLAY == 'true' && env.HAS_KEY == 'true' && (github.event_name == 'push' || inputs.upload) }}
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
