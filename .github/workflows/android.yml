@@ -1,33 +1,68 @@
 name: Android release
 
+# Builds the signed Google Play bundle (.aab) and a signed test APK.
+# Run it from Actions → "Android release" → Run workflow. The files appear:
+#   • under the run's "Artifacts", and
+#   • as a GitHub release "android-<number>" (direct download link).
+# Needs the signing secrets (ANDROID_KEYSTORE_B64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_PASSWORD,
+# ANDROID_KEY_ALIAS). Firebase (GOOGLE_SERVICES_JSON_B64) is optional: without it the app is built
+# without push notifications and Google sign-in so that it still starts.
+# The FIRST upload to Google Play is done by hand in Play Console; after that, with
+# PLAY_SERVICE_ACCOUNT_JSON set, every run uploads to the Internal testing track by itself.
 on:
   workflow_dispatch:
     inputs:
       upload:
-        description: Upload to Google Play (internal testing)
+        description: Upload to Google Play (internal testing) — only after the first manual upload
         type: boolean
-        default: true
+        default: false
   push:
     tags: ['v*']
+
+permissions:
+  contents: write
 
 jobs:
   android:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      HAS_KEY: ${{ secrets.ANDROID_KEYSTORE_B64 != '' }}
+      HAS_PLAY: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' }}
+      GOOGLE_SERVICES_JSON_B64: ${{ secrets.GOOGLE_SERVICES_JSON_B64 }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: npm }
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 21, cache: gradle }
+
+      - name: Check the signing key is set up
+        run: |
+          if [ "$HAS_KEY" != "true" ]; then
+            echo "::error::The upload key isn't in the repository secrets yet. Add ANDROID_KEYSTORE_B64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_PASSWORD and ANDROID_KEY_ALIAS (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+
       - run: npm ci
-      - name: Firebase config
-        run: bash scripts/configure-firebase.sh
-        env:
-          GOOGLE_SERVICES_JSON_B64: ${{ secrets.GOOGLE_SERVICES_JSON_B64 }}
+
+      - name: Firebase config (optional)
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON_B64" ]; then
+            bash scripts/configure-firebase.sh
+            echo "Firebase: ON (push notifications + Google sign-in)"
+          else
+            echo "No Firebase config: building without push / Google sign-in so the app still starts."
+            npm uninstall --no-save @capacitor-firebase/authentication @capacitor-firebase/messaging
+          fi
+
       - run: npx cap sync android
+
       - name: Signing key
-        run: echo "${{ secrets.ANDROID_KEYSTORE_B64 }}" | base64 --decode > "$RUNNER_TEMP/acuc-upload.jks"
+        env:
+          KS64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+        run: printf '%s' "$KS64" | tr -d '\r\n ' | base64 --decode > "$RUNNER_TEMP/acuc-upload.jks"
+
       - name: Build AAB + APK
         working-directory: android
         env:
@@ -37,16 +72,34 @@ jobs:
           ACUC_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
           VERSION=$(node -p "require('../package.json').version")
-          ./gradlew --no-daemon bundleRelease assembleRelease \
-            -PacucVersionCode=$((1000 + ${{ github.run_number }})) -PacucVersionName="$VERSION"
+          CODE=$((1000 + ${{ github.run_number }}))
+          set -o pipefail
+          ./gradlew --no-daemon bundleRelease assembleRelease -PacucVersionCode=$CODE -PacucVersionName="$VERSION" 2>&1 | tee "$GITHUB_WORKSPACE/build.log"
+          mkdir -p "$GITHUB_WORKSPACE/dist"
+          cp app/build/outputs/bundle/release/app-release.aab "$GITHUB_WORKSPACE/dist/ACUC-Jobs-$VERSION-$CODE.aab"
+          cp app/build/outputs/apk/release/app-release.apk "$GITHUB_WORKSPACE/dist/ACUC-Jobs-$VERSION-$CODE.apk"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"; echo "CODE=$CODE" >> "$GITHUB_ENV"
+
+      - name: Check the signature
+        run: |
+          jarsigner -verify dist/*.aab | tail -1
+          keytool -printcert -jarfile dist/*.aab | grep -E "Owner|SHA256:" || true
+
       - uses: actions/upload-artifact@v4
         with:
           name: acuc-android-${{ github.run_number }}
-          path: |
-            android/app/build/outputs/bundle/release/*.aab
-            android/app/build/outputs/apk/release/*.apk
+          path: dist/
+
+      - name: Publish as a release (direct download)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "android-${{ github.run_number }}" dist/* --target "$GITHUB_SHA" --prerelease \
+            --title "ACUC Jobs Android $VERSION ($CODE)" \
+            --notes "Signed for Google Play. Upload the .aab in Play Console; install the .apk on a phone to test."
+
       - name: Upload to Google Play (internal testing)
-        if: ${{ github.event_name == 'push' || inputs.upload }}
+        if: ${{ env.HAS_PLAY == 'true' && (github.event_name == 'push' || inputs.upload) }}
         uses: r0adkll/upload-google-play@v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
@@ -54,3 +107,14 @@ jobs:
           releaseFiles: android/app/build/outputs/bundle/release/app-release.aab
           track: internal
           status: completed
+
+      - name: Share the build log when the build fails
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ -f build.log ] || exit 0
+          grep -nE "error:|e: |FAILURE|What went wrong|Could not|> " build.log | tail -120 > build-errors.txt || true
+          tail -200 build.log >> build-errors.txt
+          gh release delete build-log --yes --cleanup-tag 2>/dev/null || true
+          gh release create build-log build-errors.txt --target "$GITHUB_SHA" --prerelease --title "Last failed build log" --notes "Log of run ${{ github.run_number }}"

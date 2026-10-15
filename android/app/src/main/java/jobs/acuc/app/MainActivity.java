@@ -26,6 +26,10 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // ACUC's own native pieces, reached by the site's in-app bridge by these exact names:
+        // fingerprint / face sign-in ("BiometricAuth") and the encrypted key store ("SecureStorage").
+        registerPlugin(BiometricAuthPlugin.class);
+        registerPlugin(SecureStoragePlugin.class);
         super.onCreate(savedInstanceState);
         if (bridge != null) {
             bridge.setWebViewClient(new AcucWebViewClient(bridge, this));
