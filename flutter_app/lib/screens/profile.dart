@@ -173,8 +173,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         CircleAvatar(
                           radius: 38,
                           backgroundColor: AC.bg,
-                          backgroundImage: photo.startsWith('http') ? CachedNetworkImageProvider(photo) : null,
-                          child: photo.startsWith('http') ? null : Text(Session.I.name.isEmpty ? 'A' : Session.I.name[0], style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+                          foregroundImage: photo.startsWith('http') ? CachedNetworkImageProvider(photo) : null,
+                          onForegroundImageError: photo.startsWith('http') ? (_, __) {} : null,
+                          child: Text(Session.I.name.isEmpty ? 'A' : Session.I.name[0], style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: AC.blue)),
                         ),
                         Positioned(
                           right: 0,

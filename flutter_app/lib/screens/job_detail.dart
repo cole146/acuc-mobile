@@ -265,6 +265,10 @@ class _ApplySheetState extends State<ApplySheet> {
     if (d != null) setState(() => _dates[i] = d);
   }
 
+  static const _wd = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  static const _mo = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  String _short(DateTime d) => '${_wd[d.weekday - 1]} ${d.day} ${_mo[d.month - 1]}';
+
   String _fmt(DateTime d) => '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   Future<void> _send() async {
@@ -363,14 +367,23 @@ class _ApplySheetState extends State<ApplySheet> {
                 Text(widget.job.interviewHint, style: const TextStyle(color: AC.sub)),
               ],
               const SizedBox(height: 8),
-              Wrap(spacing: 8, runSpacing: 8, children: [
-                for (var i = 0; i < 3; i++)
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(minimumSize: const Size(0, 44)),
-                    onPressed: () => _pickDate(i),
-                    icon: const Icon(Icons.event_rounded, size: 18),
-                    label: Text(_dates[i] == null ? 'Day ${i + 1}' : _fmt(_dates[i]!)),
+              Row(children: [
+                for (var i = 0; i < 3; i++) ...[
+                  if (i > 0) const SizedBox(width: 8),
+                  Expanded(
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(0, 48),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        backgroundColor: _dates[i] == null ? null : AC.blue.withValues(alpha: 0.07),
+                        side: BorderSide(color: _dates[i] == null ? AC.line : AC.blue, width: 1.5),
+                      ),
+                      onPressed: () => _pickDate(i),
+                      child: Text(_dates[i] == null ? 'Day ${i + 1}' : _short(_dates[i]!),
+                          maxLines: 1, overflow: TextOverflow.fade, softWrap: false, style: const TextStyle(fontSize: 14)),
+                    ),
                   ),
+                ],
               ]),
             ],
             if (_error.isNotEmpty) ...[
