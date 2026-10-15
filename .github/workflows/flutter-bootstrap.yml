@@ -1,0 +1,35 @@
+name: Flutter bootstrap (one-time)
+
+# Generates the Android / iOS project folders for flutter_app/ with the pinned Flutter
+# version and commits them, so they can then be customised and kept in the repository.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - run: flutter --version
+      - name: Create platform folders (existing files are kept)
+        run: |
+          flutter create --org jobs.acuc --project-name acuc_jobs --platforms android,ios --no-pub .
+          rm -f test/widget_test.dart
+          flutter --version --machine > .flutter-version.json
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A .
+          git commit -m "Flutter: generated Android/iOS project folders" || echo "nothing to commit"
+          git push
