@@ -1,0 +1,41 @@
+name: Flutter web preview (testing only)
+
+# Builds the app's screens for a browser so they can be checked against a test copy of the site.
+on:
+  workflow_dispatch:
+    inputs:
+      base:
+        description: Site address the preview talks to
+        default: http://127.0.0.1:8080
+      query_rest:
+        description: Use ?rest_route= addresses
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.7
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter create --platforms web --no-pub . && rm -f test/widget_test.dart
+      - run: flutter build web --release --base-href /app/ --dart-define=ACUC_BASE=${{ inputs.base }} --dart-define=ACUC_REST_QUERY=${{ inputs.query_rest }}
+      - run: cd build/web && zip -qr "$GITHUB_WORKSPACE/flutter-web.zip" .
+      - name: Publish
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete flutter-web-preview --yes --cleanup-tag 2>/dev/null || true
+          gh release create flutter-web-preview flutter-web.zip --target "$GITHUB_SHA" --prerelease --title "Flutter web preview (testing)" --notes "Testing build"

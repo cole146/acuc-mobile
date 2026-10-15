@@ -7,6 +7,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
 const String kBase = String.fromEnvironment('ACUC_BASE', defaultValue: 'https://acuc.jobs');
+const bool kRestQueryStyle = bool.fromEnvironment('ACUC_REST_QUERY', defaultValue: false);
 const String kAppVersion = '2.0.0';
 const String kUserAgent = 'ACUCApp/$kAppVersion (Flutter; native)';
 
@@ -109,6 +110,12 @@ class Session extends ChangeNotifier {
     q?.forEach((k, v) {
       if (v != null && '$v' != '') query[k] = '$v';
     });
+    // Signed-in answers are personal: a unique address keeps any page cache from mixing them up.
+    if (_token != null) query['_'] = DateTime.now().millisecondsSinceEpoch.toString();
+    if (kRestQueryStyle) {
+      // Sites without pretty REST URLs (and local tests): /?rest_route=/acuc/v1/…
+      return Uri.parse('$kBase/').replace(queryParameters: {'rest_route': '/acuc/v1$path', ...query});
+    }
     return Uri.parse('$kBase/wp-json/acuc/v1$path').replace(queryParameters: query.isEmpty ? null : query);
   }
 
