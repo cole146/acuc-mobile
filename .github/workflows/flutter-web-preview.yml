@@ -30,7 +30,7 @@ jobs:
           cache: true
       - run: flutter pub get
       - run: flutter create --platforms web --no-pub . && rm -f test/widget_test.dart
-      - run: flutter build web --release --base-href /app/ --dart-define=ACUC_BASE=${{ inputs.base }} --dart-define=ACUC_REST_QUERY=${{ inputs.query_rest }}
+      - run: flutter build web --profile --base-href /app/ --dart-define=ACUC_BASE=${{ inputs.base }} --dart-define=ACUC_REST_QUERY=${{ inputs.query_rest }}
       - run: cd build/web && zip -qr "$GITHUB_WORKSPACE/flutter-web.zip" .
       - name: Publish
         working-directory: .

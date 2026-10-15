@@ -125,13 +125,12 @@ class _SignInPageState extends State<SignInPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, box) => SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 22),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: box.maxHeight),
-              child: IntrinsicHeight(
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+        child: CustomScrollView(slivers: [
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 22),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
                   SizedBox(
                     height: 48,
                     child: Row(children: [
@@ -179,9 +178,12 @@ class _SignInPageState extends State<SignInPage> {
                             style: const TextStyle(fontSize: 17, color: Color(0xFF1C1E21)),
                             decoration: InputDecoration(
                               hintText: 'Password',
-                              suffixIcon: TextButton(
-                                onPressed: () => setState(() => _hide = !_hide),
-                                child: Text(_hide ? 'Show' : 'Hide', style: const TextStyle(color: Color(0xFF606770), fontWeight: FontWeight.w600)),
+                              suffixIcon: GestureDetector(
+                                onTap: () => setState(() => _hide = !_hide),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                                  child: Text(_hide ? 'Show' : 'Hide', style: const TextStyle(color: Color(0xFF606770), fontWeight: FontWeight.w600)),
+                                ),
                               ),
                             ),
                           )
@@ -254,10 +256,9 @@ class _SignInPageState extends State<SignInPage> {
                   Center(child: Opacity(opacity: 0.9, child: Image.asset('assets/images/wordmark.png', height: 22))),
                   const SizedBox(height: 18),
                 ]),
-              ),
             ),
           ),
-        ),
+        ]),
       ),
     );
   }
