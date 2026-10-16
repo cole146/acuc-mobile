@@ -16,6 +16,10 @@ import android.webkit.WebViewClient;
 import com.getcapacitor.Bridge;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebViewClient;
+import androidx.webkit.WebViewCompat;
+import androidx.webkit.WebViewFeature;
+import java.util.HashSet;
+import java.util.Set;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
@@ -25,6 +29,8 @@ import androidx.core.view.WindowInsetsCompat;
 public class MainActivity extends BridgeActivity {
 
     FastStart fastStart;
+    PageLoader pageLoader;
+    boolean shellAtStart = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,12 +39,35 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(BiometricAuthPlugin.class);
         registerPlugin(SecureStoragePlugin.class);
         fastStart = new FastStart(this);
+        pageLoader = new PageLoader(this);
         super.onCreate(savedInstanceState);
         if (bridge != null) {
             bridge.setWebViewClient(new AcucWebViewClient(bridge, this));
         }
         keepPagesBelowSystemBars();
         tuneWebView();
+        installShell();
+    }
+
+    /**
+     * The app's own screen layer (instant screen layouts on tap, offline taps, no website service worker),
+     * shipped inside the app and run at the start of every acuc.jobs screen.
+     */
+    private void installShell() {
+        try {
+            WebView wv = bridge != null ? bridge.getWebView() : null;
+            if (wv == null) return;
+            pageLoader.setUserAgent(wv.getSettings().getUserAgentString());
+            if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+                Set<String> origins = new HashSet<>();
+                origins.add("https://acuc.jobs");
+                origins.add("https://www.acuc.jobs");
+                WebViewCompat.addDocumentStartJavaScript(wv, pageLoader.shellJs(), origins);
+                shellAtStart = true;
+            }
+        } catch (Exception ignored) {
+            shellAtStart = false;
+        }
     }
 
     /** Smoother scrolling and no Android "glow" at the edges — the app has its own pull-to-refresh. */
@@ -113,6 +142,12 @@ public class MainActivity extends BridgeActivity {
                 r = fs.asset(request);
                 if (r != null) return r;
             }
+            // Screens are loaded by the app itself (offline copies, the app's own error screens).
+            // Only where the start-of-page script works: Capacitor needs it for its bridge otherwise.
+            if (activity.pageLoader != null && activity.shellAtStart && request != null) {
+                WebResourceResponse r = activity.pageLoader.load(request);
+                if (r != null) return r;
+            }
             return super.shouldInterceptRequest(view, request);
         }
 
@@ -120,6 +155,11 @@ public class MainActivity extends BridgeActivity {
         public void onPageFinished(WebView view, String url) {
             super.onPageFinished(view, url);
             if (activity.fastStart != null && url != null) activity.fastStart.pageFinished(url);
+            // Safety net: the screen layer is always there, even where it could not run at the start.
+            if (url != null && url.startsWith("https://") && FastStart.isAcucHost(Uri.parse(url).getHost()) && activity.pageLoader != null) {
+                String js = activity.pageLoader.shellJs();
+                if (!js.isEmpty()) view.evaluateJavascript("if(!window.__acucShell){" + js + "\n}", null);
+            }
         }
 
         @Override

@@ -2,7 +2,7 @@
   "appId": "jobs.acuc.app",
   "appName": "ACUC Jobs",
   "webDir": "www",
-  "appendUserAgent": "ACUCApp/1.1.0",
+  "appendUserAgent": "ACUCApp/1.2.0",
   "backgroundColor": "#FFFFFF",
   "loggingBehavior": "none",
   "server": {

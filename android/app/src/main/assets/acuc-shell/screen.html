@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>ACUC</title>
+<style>html,body{margin:0;background:#F5F7FB}</style>
+<script>/*ACUC_SHELL*/</script>
+</head><body>
+<script>
+(function () {
+  var KIND = '__KIND__';           // offline | notfound | server
+  var WAS_ONLINE = '__ONLINE__' === '1';
+  var S = window.ACUCShell;
+  var u = new URL(location.href);
+  var T = {
+    offline: [WAS_ONLINE ? 'clock' : 'wifi',
+      WAS_ONLINE ? 'Connection is slow' : 'You’re offline',
+      WAS_ONLINE ? 'ACUC is taking longer than usual to answer. We’ll keep trying for you.' : 'This screen will open by itself as soon as you’re back online.'],
+    notfound: ['compass', 'This page isn’t available', 'It may have been moved or removed. Everything else in ACUC is just a tap away.'],
+    server: ['clock', 'Just a moment', 'ACUC is busy right now. We’ll try again for you in a few seconds.']
+  }[KIND] || ['clock', 'Just a moment', ''];
+  var html = '<div class="msg"><div class="mi">' + S.svg(T[0], 28) + '</div><h1>' + T[1] + '</h1><p>' + T[2] + '</p><div class="bt">' +
+    (KIND === 'notfound' ? '<button type="button" data-a="back">Go back</button><button type="button" class="g" data-a="home">Home</button>'
+                         : '<button type="button" data-a="retry">Try again</button><button type="button" class="g" data-a="back">Go back</button>') +
+    '</div><div class="st"></div></div>';
+  var sc = S.screen(S.kindOf(u), html);
+  var st = sc.root.querySelector('.st');
+  function retry() { st.textContent = 'Opening…'; location.reload(); }
+  function back() { if (history.length > 1) history.back(); else location.replace('/network/'); }
+  sc.root.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('[data-a]') : null;
+    if (!b) return;
+    var a = b.getAttribute('data-a');
+    if (a === 'retry') retry(); else if (a === 'back') back(); else if (a === 'home') location.href = '/network/';
+  });
+  if (KIND === 'notfound') return;
+  // Keep trying by itself: right away when the connection comes back, and every few seconds while
+  // the phone says it is online (a slow or dropped connection, or a busy server).
+  window.addEventListener('online', function () { setTimeout(retry, 300); });
+  var n = 0;
+  try { var r = JSON.parse(sessionStorage.getItem('acuc_shell_retry') || '{}'); n = (r.u === location.href && Date.now() - r.t < 120000) ? r.n : 0; } catch (e) {}
+  var waits = [2, 4, 8, 15, 30, 30, 60];
+  function tick() {
+    if (navigator.onLine === false) { st.textContent = 'Waiting for a connection…'; setTimeout(tick, 3000); return; }
+    var w = waits[Math.min(n, waits.length - 1)];
+    var left = w;
+    (function count() {
+      if (left <= 0) {
+        try { sessionStorage.setItem('acuc_shell_retry', JSON.stringify({ u: location.href, n: n + 1, t: Date.now() })); } catch (e) {}
+        retry(); return;
+      }
+      st.textContent = 'Trying again in ' + left + 's';
+      left--; setTimeout(count, 1000);
+    })();
+  }
+  tick();
+  try { var C = window.Capacitor, SP = C && C.Plugins && C.Plugins.SplashScreen; if (SP) SP.hide(); } catch (e) {}
+})();
+</script>
+</body></html>
