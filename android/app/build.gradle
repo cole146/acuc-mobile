@@ -61,6 +61,8 @@ dependencies {
     implementation "androidx.biometric:biometric:1.1.0"
     implementation "androidx.security:security-crypto:1.0.0"
     implementation "androidx.fragment:fragment:$androidxFragmentVersion"
+    // Start-of-page script for the app's own screen layer (acuc-shell/shell.js)
+    implementation "androidx.webkit:webkit:$androidxWebkitVersion"
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"
     androidTestImplementation "androidx.test.espresso:espresso-core:$androidxEspressoCoreVersion"
